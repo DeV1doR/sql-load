@@ -1,3 +1,5 @@
 tmp/
 sql-load
 vendor/
+.DS_Store
+.vscode/

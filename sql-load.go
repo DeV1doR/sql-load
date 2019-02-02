@@ -27,6 +27,7 @@ var (
 	countSuccess       int
 	tmp                map[string][]float64
 	m                  sync.RWMutex
+	letterRunes        = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 )
 
 type TransactionLog struct {
@@ -108,8 +109,6 @@ func CreateHardcodedTransactionLogWithUser(db *gorm.DB, user *User) error {
 	return tx.Commit().Error
 }
 
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
 func RandStringRunes(n int) string {
 	b := make([]rune, n)
 	for i := range b {
@@ -178,7 +177,7 @@ func main() {
 
 	ticker := time.Tick(tps)
 
-	var user User
+	user := new(User)
 	db.FirstOrCreate(&user, User{
 		Email:    "test@example.com",
 		Nickname: "youruniquenickname",
@@ -189,7 +188,7 @@ func main() {
 			case <-ticker:
 				go func() {
 					start := time.Now()
-					if err := CreateHardcodedTransactionLogWithUser(db, &user); err != nil {
+					if err := CreateHardcodedTransactionLogWithUser(db, user); err != nil {
 						ch <- false
 					} else {
 						elapsed := time.Since(start).Seconds()
