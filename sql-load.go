@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"reflect"
 	"runtime"
 	"sync"
 	"time"
@@ -117,12 +118,21 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
-func getAverageFloat64(sl []float64) float64 {
-	var total float64 = 0
-	for _, value := range sl {
-		total += value
+func getAverage(i interface{}) float64 {
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Slice:
+		if reflect.TypeOf(i).Elem().Kind() != reflect.Float64 {
+			return 0
+		}
+		var total float64
+		sl := reflect.ValueOf(i)
+		for j := 0; j < sl.Len(); j++ {
+			total += sl.Index(j).Float()
+		}
+		return total / float64(sl.Len())
+	default:
+		return 0
 	}
-	return total / float64(len(sl))
 }
 
 func init() {
@@ -218,9 +228,9 @@ func main() {
 		"count":   countAll,
 		"success": countSuccess,
 		"mean": map[string]string{
-			"Create": fmt.Sprintf("%.6f", getAverageFloat64(tmp["Create"])),
-			"Save":   fmt.Sprintf("%.6f", getAverageFloat64(tmp["Save"])),
-			"Commit": fmt.Sprintf("%.6f", getAverageFloat64(tmp["Commit"])),
+			"Create": fmt.Sprintf("%.6f", getAverage(tmp["Create"])),
+			"Save":   fmt.Sprintf("%.6f", getAverage(tmp["Save"])),
+			"Commit": fmt.Sprintf("%.6f", getAverage(tmp["Commit"])),
 		},
 	}).Info("Load finished")
 	defer db.Close()
